@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My Dental Implant — AI Smile Preview</title>
+<meta name="description" content="Upload your photo and see how dental implants, full-arch restoration, or veneers could transform your smile — powered by AI.">
+<style>
+  :root{
+    --navy:#0b2545; --teal:#0e9594; --teal-dark:#0a7574; --bg:#f6f9fc;
+    --text:#1c2b3a; --muted:#5b6b7b; --white:#fff; --radius:16px;
+    --shadow:0 8px 30px rgba(11,37,69,.08);
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--text);line-height:1.6}
+  .container{max-width:1060px;margin:0 auto;padding:0 20px}
+
+  header{background:var(--white);box-shadow:0 1px 0 rgba(11,37,69,.06);position:sticky;top:0;z-index:10}
+  .nav{display:flex;align-items:center;justify-content:space-between;padding:16px 0}
+  .logo{font-size:1.25rem;font-weight:800;color:var(--navy)}
+  .logo span{color:var(--teal)}
+  .nav a.cta{background:var(--teal);color:#fff;padding:10px 20px;border-radius:999px;text-decoration:none;font-weight:600;font-size:.9rem}
+  .nav a.cta:hover{background:var(--teal-dark)}
+
+  .hero{text-align:center;padding:64px 0 40px}
+  .hero h1{font-size:clamp(1.8rem,4.5vw,2.8rem);color:var(--navy);font-weight:800;letter-spacing:-.5px}
+  .hero h1 em{color:var(--teal);font-style:normal}
+  .hero p{max-width:620px;margin:16px auto 0;color:var(--muted);font-size:1.05rem}
+
+  .card{background:var(--white);border-radius:var(--radius);box-shadow:var(--shadow);padding:32px;margin:24px auto 64px;max-width:860px}
+
+  .steps{display:flex;gap:8px;justify-content:center;margin-bottom:28px;flex-wrap:wrap}
+  .step{display:flex;align-items:center;gap:8px;font-size:.85rem;color:var(--muted);font-weight:600}
+  .step .dot{width:26px;height:26px;border-radius:50%;background:#e4ecf4;color:var(--muted);display:flex;align-items:center;justify-content:center;font-size:.8rem}
+  .step.active{color:var(--navy)}
+  .step.active .dot{background:var(--teal);color:#fff}
+  .step:not(:last-child)::after{content:"";width:28px;height:2px;background:#e4ecf4;margin-left:8px}
+
+  .drop{border:2px dashed #b8cbde;border-radius:var(--radius);padding:48px 24px;text-align:center;cursor:pointer;transition:.2s}
+  .drop:hover,.drop.dragover{border-color:var(--teal);background:#f0fafa}
+  .drop .icon{font-size:2.4rem}
+  .drop p{color:var(--muted);margin-top:8px;font-size:.95rem}
+  .drop strong{color:var(--teal)}
+  #fileInput{display:none}
+
+  .treatments{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin-top:8px}
+  .treatment{border:2px solid #e4ecf4;border-radius:var(--radius);padding:20px;cursor:pointer;text-align:center;transition:.15s;background:#fff}
+  .treatment:hover{border-color:#9fd6d5}
+  .treatment.selected{border-color:var(--teal);background:#f0fafa;box-shadow:0 0 0 3px rgba(14,149,148,.15)}
+  .treatment .t-icon{font-size:1.8rem}
+  .treatment h3{color:var(--navy);font-size:1rem;margin:8px 0 4px}
+  .treatment p{color:var(--muted);font-size:.82rem;line-height:1.45}
+
+  .preview-thumb{display:flex;align-items:center;gap:16px;background:#f0f5fa;border-radius:12px;padding:12px 16px;margin-bottom:20px}
+  .preview-thumb img{width:64px;height:64px;object-fit:cover;border-radius:10px}
+  .preview-thumb button{margin-left:auto;background:none;border:1px solid #c6d5e4;border-radius:8px;padding:6px 12px;cursor:pointer;color:var(--muted);font-size:.82rem}
+
+  .consent{display:flex;gap:10px;align-items:flex-start;margin:20px 0 0;font-size:.83rem;color:var(--muted)}
+  .consent input{margin-top:4px;accent-color:var(--teal)}
+
+  .btn{display:inline-block;width:100%;background:var(--teal);color:#fff;border:none;border-radius:999px;padding:15px;font-size:1.05rem;font-weight:700;cursor:pointer;margin-top:20px;transition:.2s}
+  .btn:hover:not(:disabled){background:var(--teal-dark)}
+  .btn:disabled{background:#c3d4e2;cursor:not-allowed}
+  .btn.secondary{background:#fff;color:var(--teal);border:2px solid var(--teal)}
+
+  .loading{text-align:center;padding:40px 0}
+  .spinner{width:52px;height:52px;border:5px solid #e4ecf4;border-top-color:var(--teal);border-radius:50%;margin:0 auto 20px;animation:spin 1s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .loading h3{color:var(--navy)}
+  .loading p{color:var(--muted);font-size:.9rem}
+
+  .ba-wrap{position:relative;border-radius:var(--radius);overflow:hidden;user-select:none;touch-action:none;background:#000}
+  .ba-wrap img{display:block;width:100%;pointer-events:none}
+  .ba-after{position:absolute;inset:0;overflow:hidden}
+  .ba-after img{position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover}
+  .ba-handle{position:absolute;top:0;bottom:0;width:4px;background:#fff;cursor:ew-resize;box-shadow:0 0 8px rgba(0,0,0,.4)}
+  .ba-handle::after{content:"⇔";position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:#fff;color:var(--navy);width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.1rem;font-weight:700;box-shadow:0 2px 10px rgba(0,0,0,.3)}
+  .ba-label{position:absolute;top:12px;background:rgba(11,37,69,.75);color:#fff;font-size:.75rem;font-weight:700;padding:4px 12px;border-radius:999px;letter-spacing:.5px}
+  .ba-label.before{left:12px}.ba-label.after{right:12px}
+
+  .result-actions{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .disclaimer{background:#fff8e6;border:1px solid #f2dfa8;border-radius:10px;padding:12px 16px;font-size:.8rem;color:#7a6320;margin-top:20px}
+  .error-box{background:#fdecec;border:1px solid #f3b8b8;border-radius:10px;padding:12px 16px;font-size:.88rem;color:#a13030;margin-top:16px;display:none}
+
+  .trust{display:flex;gap:28px;justify-content:center;flex-wrap:wrap;padding-bottom:56px;color:var(--muted);font-size:.85rem}
+  .trust div{display:flex;align-items:center;gap:8px}
+  footer{background:var(--navy);color:#c6d5e4;text-align:center;padding:28px 20px;font-size:.82rem}
+  footer .logo{color:#fff;margin-bottom:6px}
+  .hidden{display:none!important}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="container nav">
+    <div class="logo">My Dental <span>Implant</span></div>
+    <a class="cta" href="#book" id="navBook">Book a Consultation</a>
+  </div>
+</header>
+
+<section class="hero container">
+  <h1>See Your New Smile <em>Before</em> Your Treatment</h1>
+  <p>Upload a photo of your smile, choose a treatment — dental implants, full-arch restoration, or veneers — and our AI shows you a realistic preview of the result on your own face.</p>
+</section>
+
+<div class="container">
+  <div class="card">
+
+    <div class="steps">
+      <div class="step active" id="s1"><span class="dot">1</span>Upload photo</div>
+      <div class="step" id="s2"><span class="dot">2</span>Choose treatment</div>
+      <div class="step" id="s3"><span class="dot">3</span>See your new smile</div>
+    </div>
+
+    <!-- STEP 1: Upload -->
+    <div id="stepUpload">
+      <div class="drop" id="dropZone">
+        <div class="icon">📸</div>
+        <p><strong>Click to upload</strong> or drag &amp; drop your photo</p>
+        <p>A clear, front-facing photo where your smile is visible works best. JPG/PNG, max 8&nbsp;MB.</p>
+      </div>
+      <input type="file" id="fileInput" accept="image/jpeg,image/png,image/webp">
+    </div>
+
+    <!-- STEP 2: Treatment -->
+    <div id="stepTreatment" class="hidden">
+      <div class="preview-thumb">
+        <img id="thumb" alt="Your photo">
+        <div><strong>Your photo</strong><br><span style="color:var(--muted);font-size:.82rem" id="fileName"></span></div>
+        <button id="changePhoto">Change</button>
+      </div>
+
+      <div class="treatments">
+        <div class="treatment" data-t="implant">
+          <div class="t-icon">🦷</div>
+          <h3>Dental Implant</h3>
+          <p>Replace one or more missing teeth with natural-looking implant crowns.</p>
+        </div>
+        <div class="treatment" data-t="full-arch">
+          <div class="t-icon">😁</div>
+          <h3>Full Arch</h3>
+          <p>A complete new set of fixed, natural-looking teeth (All-on-4 / All-on-6).</p>
+        </div>
+        <div class="treatment" data-t="veneers">
+          <div class="t-icon">✨</div>
+          <h3>Veneers</h3>
+          <p>Straight, bright, perfectly shaped teeth with porcelain veneers.</p>
+        </div>
+      </div>
+
+      <label class="consent">
+        <input type="checkbox" id="consent">
+        <span>I agree that my photo will be processed by an AI service to generate a smile preview. The result is an illustration only — not a medical prediction or guarantee of treatment outcome.</span>
+      </label>
+
+      <button class="btn" id="generateBtn" disabled>Generate My New Smile</button>
+      <div class="error-box" id="errorBox"></div>
+    </div>
+
+    <!-- STEP 3: Loading -->
+    <div id="stepLoading" class="loading hidden">
+      <div class="spinner"></div>
+      <h3>Designing your new smile…</h3>
+      <p>This usually takes 20–60 seconds. Please keep this page open.</p>
+    </div>
+
+    <!-- STEP 4: Result -->
+    <div id="stepResult" class="hidden">
+      <div class="ba-wrap" id="baWrap">
+        <img id="beforeImg" alt="Before">
+        <div class="ba-after" id="baAfter"><img id="afterImg" alt="After"></div>
+        <div class="ba-handle" id="baHandle"></div>
+        <span class="ba-label before">BEFORE</span>
+        <span class="ba-label after">AFTER</span>
+      </div>
+      <p style="text-align:center;color:var(--muted);font-size:.85rem;margin-top:10px">Drag the slider to compare before and after</p>
+
+      <div class="result-actions" style="margin-top:20px">
+        <button class="btn secondary" id="tryAgainBtn" style="margin-top:0">Try Another Photo</button>
+        <a class="btn" id="bookBtn" href="#book" style="margin-top:0;text-align:center;text-decoration:none">Book a Free Consultation</a>
+      </div>
+      <a id="downloadBtn" class="btn secondary" style="margin-top:12px;text-align:center;text-decoration:none" download="my-new-smile.jpg">Download My New Smile</a>
+
+      <div class="disclaimer">
+        ⚠️ This image is an AI-generated illustration for visualization purposes only. Actual treatment results vary by patient and can only be assessed by a licensed dentist after clinical examination.
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="container trust">
+  <div>🔒 Photos are processed securely and not stored on this website</div>
+  <div>🤖 Powered by advanced AI image technology</div>
+  <div>🩺 Reviewed treatment plans by licensed dentists</div>
+</div>
+
+<footer id="book">
+  <div class="logo">My Dental <span style="color:var(--teal)">Implant</span></div>
+  <p>Ready for the real thing? Contact us: <a href="mailto:ads@visalibrary.com" style="color:#7fd4d3">ads@visalibrary.com</a></p>
+  <p style="margin-top:8px;opacity:.7">© 2026 My Dental Implant. AI previews are illustrative only and do not constitute medical advice.</p>
+</footer>
+
+<script>
+const API_URL = '/api/generate'; // same-origin serverless function
+
+const $ = (id) => document.getElementById(id);
+let photoDataUrl = null;
+let selectedTreatment = null;
+
+function setStep(n){
+  [1,2,3].forEach(i => $('s'+i).classList.toggle('active', i <= n));
+}
+function show(id){
+  ['stepUpload','stepTreatment','stepLoading','stepResult'].forEach(s => $(s).classList.add('hidden'));
+  $(id).classList.remove('hidden');
+}
+function showError(msg){
+  const box = $('errorBox');
+  box.textContent = msg;
+  box.style.display = 'block';
+}
+
+// --- Upload ---
+const dropZone = $('dropZone'), fileInput = $('fileInput');
+dropZone.addEventListener('click', () => fileInput.click());
+dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('dragover'); });
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+dropZone.addEventListener('drop', e => {
+  e.preventDefault(); dropZone.classList.remove('dragover');
+  if (e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]);
+});
+fileInput.addEventListener('change', () => { if (fileInput.files[0]) handleFile(fileInput.files[0]); });
+
+function handleFile(file){
+  if (!/^image\/(jpeg|png|webp)$/.test(file.type)) { alert('Please upload a JPG, PNG, or WebP image.'); return; }
+  if (file.size > 8 * 1024 * 1024) { alert('Photo too large — please use an image under 8 MB.'); return; }
+  const img = new Image();
+  const reader = new FileReader();
+  reader.onload = e => { img.src = e.target.result; };
+  img.onload = () => {
+    // Downscale to max 1536px and re-encode as JPEG to keep payload small
+    const max = 1536;
+    const scale = Math.min(1, max / Math.max(img.width, img.height));
+    const canvas = document.createElement('canvas');
+    canvas.width = Math.round(img.width * scale);
+    canvas.height = Math.round(img.height * scale);
+    canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+    photoDataUrl = canvas.toDataURL('image/jpeg', 0.92);
+    $('thumb').src = photoDataUrl;
+    $('fileName').textContent = file.name;
+    setStep(2); show('stepTreatment');
+  };
+  reader.readAsDataURL(file);
+}
+
+$('changePhoto').addEventListener('click', () => { setStep(1); show('stepUpload'); });
+
+// --- Treatment selection ---
+document.querySelectorAll('.treatment').forEach(el => {
+  el.addEventListener('click', () => {
+    document.querySelectorAll('.treatment').forEach(t => t.classList.remove('selected'));
+    el.classList.add('selected');
+    selectedTreatment = el.dataset.t;
+    updateBtn();
+  });
+});
+$('consent').addEventListener('change', updateBtn);
+function updateBtn(){
+  $('generateBtn').disabled = !(selectedTreatment && $('consent').checked);
+}
+
+// --- Generate ---
+$('generateBtn').addEventListener('click', async () => {
+  $('errorBox').style.display = 'none';
+  setStep(3); show('stepLoading');
+  try {
+    const res = await fetch(API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ image: photoDataUrl, treatment: selectedTreatment })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Generation failed. Please try again.');
+    showResult(data.url);
+  } catch (err) {
+    show('stepTreatment'); setStep(2);
+    showError(err.message);
+  }
+});
+
+// --- Result + before/after slider ---
+function showResult(afterUrl){
+  $('beforeImg').src = photoDataUrl;
+  $('afterImg').src = afterUrl;
+  $('downloadBtn').href = afterUrl;
+  show('stepResult');
+  initSlider();
+}
+
+function initSlider(){
+  const wrap = $('baWrap'), after = $('baAfter'), handle = $('baHandle');
+  function setPos(pct){
+    pct = Math.max(0, Math.min(100, pct));
+    after.style.clipPath = `inset(0 0 0 ${pct}%)`;
+    handle.style.left = `calc(${pct}% - 2px)`;
+  }
+  setPos(50);
+  let dragging = false;
+  const move = (clientX) => {
+    const r = wrap.getBoundingClientRect();
+    setPos(((clientX - r.left) / r.width) * 100);
+  };
+  wrap.addEventListener('pointerdown', e => { dragging = true; move(e.clientX); });
+  window.addEventListener('pointermove', e => { if (dragging) move(e.clientX); });
+  window.addEventListener('pointerup', () => { dragging = false; });
+}
+
+$('tryAgainBtn').addEventListener('click', () => {
+  photoDataUrl = null; selectedTreatment = null;
+  $('consent').checked = false;
+  document.querySelectorAll('.treatment').forEach(t => t.classList.remove('selected'));
+  updateBtn();
+  setStep(1); show('stepUpload');
+});
+</script>
+</body>
+</html>

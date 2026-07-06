@@ -1,0 +1,13 @@
+{
+  "name": "my-dental-implant-smile-preview",
+  "version": "1.0.0",
+  "private": true,
+  "description": "AI smile preview website for My Dental Implant - implants, full arch, veneers",
+  "type": "module",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "start": "node server.js"
+  }
+}
