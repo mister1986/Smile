@@ -7,7 +7,7 @@
 // Optional:
 //   GEMINI_MODEL = model id, default "gemini-2.5-flash-image" (free tier ~500 images/day)
 
-const MODEL = 'gemini-3.1-flash-lite-image';
+const MODEL = 'gemini-3.1-flash-image';
 
 const PROMPTS = {
   implant:
