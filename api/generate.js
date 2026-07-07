@@ -67,7 +67,7 @@ export default async function handler(req, res) {
     if (!apiRes.ok) {
       let msg = json?.error?.message || `Gemini error ${apiRes.status}`;
       if (apiRes.status === 429) msg = 'Free-tier limit reached (about 10/minute, 500/day). Please wait a minute and try again.';
-     if (apiRes.status === 429) msg = 'Free-tier limit reached (about 10/minute, 500/day). Please wait a minute and try again.';
+     if (apiRes.status === 429) msg = 'Gemini quota message: ' + (json?.error?.message || 'no detail');
       return res.status(502).json({ error: msg });
     }
 
